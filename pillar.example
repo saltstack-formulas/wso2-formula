@@ -1,0 +1,16 @@
+#### wso2
+wso2:
+  as:
+    user: wso2as
+    group: users
+    version: 5.1.0
+  esb:
+    user: wso2esb
+    group: users
+    version: 4.7.0
+    db_username: wso2esb
+    db_password: wso2esb
+    jdbc_url: "jdbc:mysql://localhost:3306/wso2esb"
+    jdbc_driver: 'com.mysql.jdbc.Driver'
+    extra_jar:
+      - mariadb-java-client-1.1.3.jar
