@@ -9,9 +9,12 @@ wso2:
     group: users
     version: 4.7.0
     database: postgresql
+    db_url: localhost
+    db_port: 5432
+    db_name: wso2esb
     db_username: wso2esb
     db_password: wso2esb
-    jdbc_url: "jdbc:postgresql://localhost:5432/wso2esb"
+    jdbc_url: "jdbc:postgresql://"
     jdbc_driver: org.postgresql.Driver
     extra_jar:
       - postgresql-9.2-1003.jdbc4.jar
