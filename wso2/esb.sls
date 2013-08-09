@@ -12,7 +12,29 @@ wso2esb:
     - source: salt://wso2/files/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}.zip
     - source_hash: md5=8dc1cea6e99ed2ef1a2bb75c92097320
     - archive_format: zip
-    - if_missing: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}/
+    - if_missing: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}
+
+wso2_user:
+  user.present:
+    - name: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
+    - fullname: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }} 
+    - shell: /bin/bash
+    - home: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}
+    - require:
+      - archive: wso2esb
+
+wso2_dir:
+  file.directory:
+    - name: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}
+    - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
+    - group: {{ salt['pillar.get']('wso2:esb:group', 'users') }}
+    - mode: 755
+    - recurse:
+      - user
+      - group
+    - require:
+      - archive: wso2esb
+      - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}    
 
 ## wso2esb config:
 carbon.xml:
@@ -50,43 +72,8 @@ axis2.xml:
     - require:
       - archive: wso2esb
       - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
-
-{% if salt['pillar.get']('wso2:esb:db_username') %}
-master-datasources.xml:
-  file.managed:
-    - name: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}/repository/conf/datasources/master-datasources.xml
-    - template: jinja
-    - source: salt://wso2/templates/master-datasources.xml.jinja
-    - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
-    - group: {{ salt['pillar.get']('wso2:esb:group', 'users') }}
-    - mode: 0755
-    - require:
-      - archive: wso2esb
-      - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
-{% endif %}
-
-wso2_user:
-  user.present:
-    - name: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
-    - fullname: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }} 
-    - shell: /bin/bash
-    - home: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}
-    - require:
-      - archive: wso2esb
-
-wso2_dir:
-  file.directory:
-    - name: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}
-    - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
-    - group: {{ salt['pillar.get']('wso2:esb:group', 'users') }}
-    - mode: 755
-    - recurse:
-      - user
-      - group
-    - require:
-      - archive: wso2esb
-      - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
-
+      
+## wso2 esb extra jar files      
 {% if salt['pillar.get']('wso2:esb:extra_jar') %}
 {% for jar in salt['pillar.get']('wso2:esb:extra_jar') %}
 {{ jar }}:
@@ -99,9 +86,22 @@ wso2_dir:
       - archive: wso2esb
       - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
 {% endfor %}
-{% endif %}
+{% endif %}      
 
+## wso2 esb database
 {% if salt['pillar.get']('wso2:esb:database') %}
+master-datasources.xml:
+  file.managed:
+    - name: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}/repository/conf/datasources/master-datasources.xml
+    - template: jinja
+    - source: salt://wso2/templates/master-datasources.xml.jinja
+    - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
+    - group: {{ salt['pillar.get']('wso2:esb:group', 'users') }}
+    - mode: 0755
+    - require:
+      - archive: wso2esb
+      - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
+
 {% if salt['pillar.get']('wso2:esb:database', {}) == 'postgresql' %}
 postgresql:
   pkg.installed:
@@ -122,7 +122,7 @@ wso2esb_postgres_user:
 
 wso2esb_postgres_database:
   postgres_database.present:
-    - name: wso2esb
+    - name: {{ salt['pillar.get']('wso2:esb:db_name') }}
     - encoding: UTF8
     - owner: {{ salt['pillar.get']('wso2:esb:db_username') }}
     - runas: postgres
@@ -150,7 +150,24 @@ script_start:
       - postgres_database: wso2esb
       - file: carbon.xml
       - file: jmx.xml
-      - file: axis2.xml    
+      - file: axis2.xml
+
+script_restart:
+  cmd.wait:
+    - name: "/opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}/bin/wso2server.sh --restart"
+    - env:  
+      - JAVA_HOME: '/usr/lib/jvm/java-7-openjdk'
+    - shell: /bin/bash
+    - user: {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }}
+    - group: {{ salt['pillar.get']('wso2:esb:group', 'users') }}
+    - cwd: /opt/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}/bin/
+    - onlyif: "ps -ef | grep {{ salt['pillar.get']('wso2:esb:user', 'wso2esb') }} | grep wso2server.sh | grep -v grep"
+    - watch: 
+      - file: carbon.xml
+      - file: jmx.xml
+      - file: axis2.xml
+      - file: master-datasources.xml
+
 {% else %}
 script_start:  
   cmd.run:
@@ -167,7 +184,6 @@ script_start:
       - file: carbon.xml
       - file: jmx.xml
       - file: axis2.xml
-{% endif %}
 
 script_restart:
   cmd.wait:
@@ -183,3 +199,4 @@ script_restart:
       - file: carbon.xml
       - file: jmx.xml
       - file: axis2.xml
+{% endif %}

@@ -14,7 +14,7 @@
             </jndiConfig>
             <definition type="RDBMS">
                 <configuration>
-                    <url>{{ salt['pillar.get']('wso2:esb:jdbc_url') }}</url>
+                    <url>{{ salt['pillar.get']('wso2:esb:jdbc_url') }}{{ salt['pillar.get']('wso2:esb:db_url') }}:{{ salt['pillar.get']('wso2:esb:db_port') }}/{{ salt['pillar.get']('wso2:esb:db_name') }}</url>
                     <username>{{ salt['pillar.get']('wso2:esb:db_username') }}</username>
                     <password>{{ salt['pillar.get']('wso2:esb:db_password') }}</password>
                     <driverClassName>{{ salt['pillar.get']('wso2:esb:jdbc_driver') }}</driverClassName>
