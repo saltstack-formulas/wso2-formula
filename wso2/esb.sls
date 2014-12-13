@@ -1,13 +1,11 @@
 ## java is needed:
 
 jdk7-openjdk:
-  pkg:
-    - installed
+  pkg.installed: []
 
 ## wso2esb zip file
 wso2esb:
-  archive:
-    - extracted
+  archive.extracted:
     - name: /opt/ 
     - source: salt://wso2/files/wso2esb-{{ salt['pillar.get']('wso2:esb:version', '4.7.0') }}.zip
     - source_hash: md5=8dc1cea6e99ed2ef1a2bb75c92097320

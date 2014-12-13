@@ -1,6 +1,5 @@
 wso2as:
-  archive:
-    - extracted
+  archive.extracted:
     - name: /opt/ 
     - source: salt://wso2/files/wso2as-{{ salt['pillar.get']('wso2:as:version', '5.1.0') }}.zip
     - source_hash: md5=cfd05da8b370ac61a32c18d998de2236
@@ -8,9 +7,8 @@ wso2as:
     - if_missing: /opt/wso2as-{{ salt['pillar.get']('wso2:as:version', '5.1.0') }}/
 
 carbon.xml:
-  file:
+  file.managed:
     - name: /opt/wso2as-{{ salt['pillar.get']('wso2:as:version', '5.1.0') }}/repository/conf/carbon.xml
-    - managed
     - template: jinja
     - source: salt://wso2/templates/carbon.xml.jinja
     - user: {{ salt['pillar.get']('wso2:as:user', 'wso2') }}
@@ -20,9 +18,8 @@ carbon.xml:
       - archive: wso2as
 
 jmx.xml:
-  file:
+  file.managed:
     - name: /opt/wso2as-{{ salt['pillar.get']('wso2:as:version', '5.1.0') }}/repository/conf/etc/jmx.xml
-    - managed
     - template: jinja
     - source: salt://wso2/templates/jmx.xml.jinja
     - user: {{ salt['pillar.get']('wso2:as:user', 'wso2') }}
@@ -32,8 +29,7 @@ jmx.xml:
       - archive: wso2as
 
 jdk7-openjdk:
-  pkg:
-    - installed
+  pkg.installed: []
 
 wso2_user:
   user.present:
